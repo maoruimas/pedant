@@ -167,6 +167,7 @@ Item {
                 if (pdt.get(i).name === task) {
                     taskId = i
                     backend.file = pdt.get(i).file
+                    return
                 }
             }
             if (n) {

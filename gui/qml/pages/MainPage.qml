@@ -115,7 +115,8 @@ MyPage {
         id: refresher
         interval: 60000
         running: backend.isRunning
-        onTriggered: backend.update()
+        repeat: true
+        onTriggered: backend.analyze()
     }
 
     Pane {

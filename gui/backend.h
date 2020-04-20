@@ -93,8 +93,6 @@ private:
 
     bool m_isRunning;
     int m_today, m_total, m_average;
-    int m_ndays;
-    int m_lastAnalyzeTime;
 };
 
 #endif // BACKEND_H

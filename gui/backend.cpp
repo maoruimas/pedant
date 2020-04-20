@@ -10,14 +10,17 @@
 #include <QDebug>
 
 Backend::Backend(QObject *parent)
-    : QObject(parent)
-    , m_statisticsModel(new StatisticsModel)
-    , m_recordsModel(new RecordsModel)
+        : QObject(parent)
+        , m_statisticsModel(new StatisticsModel)
+        , m_recordsModel(new RecordsModel)
 {
     qsrand(uint(QDateTime::currentSecsSinceEpoch()));
 
     m_statisticsModel->setStatistics(&m_statistics);
     m_recordsModel->setRecords(&m_records);
+
+    m_isRunning = false;
+    m_today = m_total = m_average = 0;
 }
 
 Backend::~Backend()
@@ -34,37 +37,9 @@ int Backend::count() {
         return 0;
     }
 }
-int Backend::today() {
-    if (m_isRunning) {
-        QDateTime last = toDateTime(m_lastAnalyzeTime);
-        QDateTime now = QDateTime::currentDateTime();
-        if (last.daysTo(now)) { // a new day
-            QDateTime beg(now.date());
-            return int(beg.secsTo(now))/60;
-        } else { // same day
-            return m_today + int(last.secsTo(now))/60;
-        }
-    } else {
-        return m_today;
-    }
-}
-int Backend::total() {
-    if (m_isRunning) {
-        return m_total + (nowRecord() - m_lastAnalyzeTime);
-    } else {
-        return m_total;
-    }
-}
-int Backend::average() {
-    if (m_isRunning) {
-        QDateTime last = toDateTime(m_lastAnalyzeTime);
-        QDateTime now = QDateTime::currentDateTime();
-        int n = m_ndays + int(last.daysTo(now));
-        return total() / n;
-    } else {
-        return m_average;
-    }
-}
+int Backend::today() { return m_today; }
+int Backend::total() { return m_total; }
+int Backend::average() { return m_average; }
 
 RecordsModel *Backend::recordsModel() const
 {
@@ -75,7 +50,7 @@ bool Backend::edit(int row, int from, int to)
 {
     int i = 2*row;
     if ((i && m_records[i-1] > from) ||
-            (i+2<m_records.length() && m_records[i+2] < to)) {
+                    (i+2<m_records.length() && m_records[i+2] < to)) {
         emit error(tr("Overlap"));
         return false;
     }
@@ -113,7 +88,7 @@ StatisticsModel *Backend::statisticsModel() const
 
 void Backend::analyze()
 {
-    m_lastAnalyzeTime = nowRecord();
+    int now = nowRecord();
     // m_isRunning
     m_isRunning = m_records.length() % 2;
     emit isRunningChanged();
@@ -122,7 +97,7 @@ void Backend::analyze()
     m_total = 0;
     for(int i = 0; i < m_records.length(); i += 2) {
         int fromMin = m_records[i];
-        int toMin = (i == m_records.length()-1) ? m_lastAnalyzeTime : m_records[i+1];
+        int toMin = (i == m_records.length()-1) ? now : m_records[i+1];
         m_total += toMin - fromMin;
         QDateTime from = toDateTime(fromMin);
         QDateTime to = toDateTime(toMin);
@@ -136,10 +111,9 @@ void Backend::analyze()
             from = next;
         } while (from < to);
     }
-    m_ndays = history.length();
     // m_today, m_average, etc
-    m_today = (history.back().first == toDateTime(m_lastAnalyzeTime).date()) ?
-                history.back().second : 0;
+    m_today = (history.back().first == toDateTime(now).date()) ?
+                            history.back().second : 0;
     m_average = history.isEmpty() ? 0 : m_total / history.length();
     emit countChanged();
     emit todayChanged();
@@ -174,12 +148,7 @@ void Backend::analyze()
 
 void Backend::update()
 {
-    if (m_isRunning) {
-        emit countChanged();
-        emit todayChanged();
-        emit totalChanged();
-        emit averageChanged();
-    }
+    emit countChanged();
 }
 
 bool Backend::toggle()
@@ -323,7 +292,7 @@ bool Backend::encrypt(const QString &fileName, const QString &text)
         return false;
     }
     QByteArray data = QAESEncryption::Crypt(QAESEncryption::AES_256, QAESEncryption::CBC,
-                                     text.toUtf8(), m_hashKey, m_hashIV);
+                                            text.toUtf8(), m_hashKey, m_hashIV);
     fout.write(data);
     fout.close();
     return true;
@@ -404,7 +373,7 @@ void Backend::clear()
     m_statistics.clear();
     m_statisticsModel->endResetAll();
     m_isRunning = false;
-    m_today = m_total = m_average = m_ndays = 0;
+    m_today = m_total = m_average = 0;
     emit fileChanged();
     emit isRunningChanged();
     emit countChanged();
