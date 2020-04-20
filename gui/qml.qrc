@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/SpinRing.qml</file>
+        <file>qml/custom/Logic.qml</file>
+        <file>qml/custom/MyListModel.qml</file>
+        <file>qml/custom/MyPage.qml</file>
+        <file>qml/custom/MyTextField.qml</file>
+        <file>qml/custom/TipPopup.qml</file>
+        <file>qml/pages/LandingPage.qml</file>
+        <file>qml/pages/MainPage.qml</file>
+        <file>qml/pages/HistoryPage.qml</file>
+        <file>fonts/fontello.ttf</file>
+        <file>qml/custom/DragInput.qml</file>
+        <file>qml/custom/AddPopup.qml</file>
+        <file>images/icon.png</file>
+        <file>images/icon.ico</file>
+        <file>qml/custom/AddOnePopup.qml</file>
+        <file>qml/custom/MyDrawer.qml</file>
+        <file>qml/custom/MyButton.qml</file>
+    </qresource>
+</RCC>
